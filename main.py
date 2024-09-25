@@ -1,16 +1,23 @@
-# This is a sample Python script.
+import numpy as np
 
-# Press Umschalt+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Strg+F8 to toggle the breakpoint.
+input_vector = np.array([2, 1.5])
+weights_1 = np.array([1.45, -0.66])
+bias = np.array([0.0])
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
+def make_prediction(input_vector, weights, bias):
+    layer_1 = np.dot(input_vector, weights) + bias
+    layer_2 = sigmoid(layer_1)
+    return layer_2
+
+
+prediction = make_prediction(input_vector, weights_1, bias)
+
+target = 0
+
+mse = np.square(prediction - target)
+print(f"Prediction: {prediction}; Error: {mse}")
