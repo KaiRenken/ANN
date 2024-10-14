@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import pandas as pd
 import torch
 import torch.nn as nn
@@ -65,3 +66,8 @@ for i in range(epochs):
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
+
+plt.plot(range(epochs), losses)
+plt.ylabel('loss/error')
+plt.xlabel('Epoch')
+plt.show()
