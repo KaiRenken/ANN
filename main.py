@@ -1,54 +1,67 @@
-import numpy as np
+import pandas as pd
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+from sklearn.model_selection import train_test_split
 
 
-class NeuralNetwork:
-    def __init__(self, learning_rate):
-        self.weights = np.array([np.random.randn(), np.random.randn()])
-        self.bias = np.random.randn()
-        self.learning_rate = learning_rate
+class Model(nn.Module):
 
-    def _sigmoid(self, x):
-        return 1 / (1 + np.exp(-x))
+    def __init__(self, in_features=4, h1=8, h2=9, out_features=3, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fc1 = nn.Linear(in_features, h1)
+        self.fc2 = nn.Linear(h1, h2)
+        self.out = nn.Linear(h2, out_features)
 
-    def _sigmoid_deriv(self, x):
-        return self._sigmoid(x) * (1 - self._sigmoid(x))
+    def forward(self, x):
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = F.relu(self.out(x))
 
-    def predict(self, input_vector):
-        layer_1 = np.dot(input_vector, self.weights) + self.bias
-        layer_2 = self._sigmoid(layer_1)
-        prediction = layer_2
-        return prediction
-
-    def _compute_gradients(self, input_vector, target):
-        layer_1 = np.dot(input_vector, self.weights) + self.bias
-        layer_2 = self._sigmoid(layer_1)
-        prediction = layer_2
-
-        derror_dprediction = 2 * (prediction - target)
-        dprediction_dlayer1 = self._sigmoid_deriv(layer_1)
-        dlayer1_dbias = 1
-        dlayer1_dweights = (0 * self.weights) + (1 * input_vector)
-
-        derror_dbias = (
-                derror_dprediction * dprediction_dlayer1 * dlayer1_dbias
-        )
-        derror_dweights = (
-                derror_dprediction * dprediction_dlayer1 * dlayer1_dweights
-        )
-
-        return derror_dbias, derror_dweights
-
-    def _update_parameters(self, derror_dbias, derror_dweights):
-        self.bias = self.bias - (derror_dbias * self.learning_rate)
-        self.weights = self.weights - (
-                derror_dweights * self.learning_rate
-        )
+        return x
 
 
-input_vector = np.array([2, 1.5])
+torch.manual_seed(41)
 
-learning_rate = 0.1
+model = Model()
 
-neural_network = NeuralNetwork(learning_rate)
+url = 'https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/0e7a9b0a5d22642a06d3d5b9bcbad9890c8ee534/iris.csv'
+my_df = pd.read_csv(url)
 
-print(neural_network.predict(input_vector))
+my_df['species'] = my_df['species'].replace('setosa', 0.0)
+my_df['species'] = my_df['species'].replace('versicolor', 1.0)
+my_df['species'] = my_df['species'].replace('virginica', 2.0)
+
+X = my_df.drop('species', axis='columns')
+y = my_df['species']
+
+X = X.values
+y = y.values
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=41)
+
+X_train = torch.FloatTensor(X_train)
+X_test = torch.FloatTensor(X_test)
+
+y_train = torch.LongTensor(y_train)
+y_test = torch.LongTensor(y_test)
+
+criterion = nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+
+epochs = 100
+losses = []
+
+for i in range(epochs):
+    y_pred = model.forward(X_train)
+
+    loss = criterion(y_pred, y_train)
+    losses.append(loss.detach().numpy())
+
+    if i % 10 == 0:
+        print(f'Epoch: {i} and loss: {loss}')
+
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
