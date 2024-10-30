@@ -2,34 +2,42 @@ import torch
 from sklearn.metrics import r2_score
 from torch import nn
 
+ARCH = nn.Sequential(
+    nn.Linear(2, 5),
+    nn.ReLU(),
+    nn.Linear(5, 1)
+)
 
-class MyMachine(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.fc = nn.Sequential(
-            nn.Linear(2, 5),
-            nn.ReLU(),
-            nn.Linear(5, 1)
-        )
+NUM_EPOCHS = 1000
 
-    def forward(self, x):
-        x = self.fc(x)
-        return x
+SIZE_TRAIN_SET = 1000
+
+SIZE_TEST_SET = 1000
 
 
-def get_dataset():
-    X = torch.rand((1000, 2))
+def get_dataset(size):
+    X = torch.rand((size, 2))
     x1 = X[:, 0]
     x2 = X[:, 1]
     y = x1 * x2
     return X, y
 
 
+class MyMachine(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.fc = ARCH
+
+    def forward(self, x):
+        x = self.fc(x)
+        return x
+
+
 def train():
     model = MyMachine()
     model.train()
-    X, y = get_dataset()
-    NUM_EPOCHS = 1000
+    X, y = get_dataset(SIZE_TRAIN_SET)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-2, weight_decay=1e-5)
     criterion = torch.nn.MSELoss(reduction='mean')
 
@@ -48,10 +56,11 @@ def test():
     model = MyMachine()
     model.load_state_dict(torch.load("model.h5"))
     model.eval()
-    X, y = get_dataset()
+    X, y = get_dataset(SIZE_TEST_SET)
 
     with torch.no_grad():
         y_pred = model(X)
+        print(y_pred)
         print(r2_score(y, y_pred))
 
 
