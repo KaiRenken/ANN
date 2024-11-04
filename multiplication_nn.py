@@ -16,6 +16,12 @@ SIZE_TRAIN_SET = 1000
 
 SIZE_TEST_SET = 1000
 
+LEARNING_RATE = 1e-3
+
+WEIGHT_DECAY = 1e-5
+
+RESHAPE = 1000
+
 
 def get_dataset(size):
     X = torch.rand((size, 2)) * 100
@@ -41,13 +47,13 @@ def train():
     model.load_state_dict(torch.load("model.h5"))
     model.train()
     X, y = get_dataset(SIZE_TRAIN_SET)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-6, weight_decay=1e-5)
+    optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
     criterion = torch.nn.MSELoss(reduction='mean')
 
     for epoch in range(NUM_EPOCHS):
         optimizer.zero_grad()
         y_pred = model(X)
-        y_pred = y_pred.reshape(1000)
+        y_pred = y_pred.reshape(RESHAPE)
         loss = criterion(y_pred, y)
         loss.backward()
         optimizer.step()
@@ -67,13 +73,4 @@ def test():
 
 
 # train()
-# test()
-
-n1 = float(input())
-n2 = float(input())
-
-model = MyMachine()
-model.load_state_dict(torch.load("model.h5"))
-model.eval()
-
-print(model(torch.Tensor([[n1, n2]])))
+test()
